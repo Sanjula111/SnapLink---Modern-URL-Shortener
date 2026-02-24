@@ -689,28 +689,63 @@
             }
         });
 
-        // Copy to clipboard
-        document.addEventListener('DOMContentLoaded', function() {
-            const copyBtn = document.getElementById('copyBtn');
-            if (copyBtn) {
-                copyBtn.addEventListener('click', function() {
-                    const shortUrl = document.getElementById('shortUrl').textContent;
-                    if (shortUrl) {
+        // Copy to clipboard - using event delegation for reliability
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'copyBtn') {
+                console.log('Copy button clicked!'); // Debug log
+                const shortUrl = document.getElementById('shortUrl').textContent;
+                console.log('URL to copy:', shortUrl); // Debug log
+                if (shortUrl) {
+                    // Try to copy to clipboard
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(shortUrl).then(() => {
+                            console.log('Copied successfully!'); // Debug log
                             showToast('📋 Copied to clipboard!');
                             // Change button text temporarily
-                            copyBtn.textContent = 'Copied!';
+                            e.target.textContent = 'Copied! ✓';
                             setTimeout(() => {
-                                copyBtn.textContent = 'Copy';
+                                e.target.textContent = 'Copy';
                             }, 2000);
                         }).catch(err => {
                             console.error('Failed to copy:', err);
-                            showToast('❌ Failed to copy');
+                            // Fallback method
+                            fallbackCopy(shortUrl);
                         });
+                    } else {
+                        // Fallback for older browsers
+                        fallbackCopy(shortUrl);
                     }
-                });
+                } else {
+                    console.log('No URL to copy!'); // Debug log
+                    showToast('⚠️ No URL to copy');
+                }
             }
         });
+
+        // Fallback copy method for older browsers
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('📋 Copied to clipboard!');
+                const copyBtn = document.getElementById('copyBtn');
+                if (copyBtn) {
+                    copyBtn.textContent = 'Copied! ✓';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                    }, 2000);
+                }
+            } catch (err) {
+                showToast('❌ Failed to copy');
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textArea);
+        }
 
         // Show toast notification
         function showToast(message) {
