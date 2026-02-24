@@ -171,7 +171,7 @@
             z-index: 1;
         }
 
-        input[type="url"] {
+        input[type="text"] {
             width: 100%;
             padding: 18px 24px;
             font-size: 1rem;
@@ -184,14 +184,23 @@
             outline: none;
         }
 
-        input[type="url"]:focus {
+        input[type="text"]:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.1);
             transform: translateY(-2px);
         }
 
-        input[type="url"]::placeholder {
+        input[type="text"]::placeholder {
             color: var(--text-secondary);
+            background: transparent;
+        }
+        
+        input[type="text"]:-webkit-autofill,
+        input[type="text"]:-webkit-autofill:hover,
+        input[type="text"]:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px var(--bg-tertiary) inset;
+            -webkit-text-fill-color: var(--text-primary);
+            transition: background-color 5000s ease-in-out 0s;
         }
 
         .btn-primary {
@@ -299,6 +308,7 @@
             font-weight: 600;
             transition: all 0.3s ease;
             white-space: nowrap;
+            font-family: 'Outfit', sans-serif;
         }
 
         .btn-copy:hover {
@@ -307,18 +317,26 @@
             transform: scale(1.05);
         }
 
+        .btn-copy:active {
+            transform: scale(0.95);
+        }
+
         .qr-code {
             text-align: center;
             margin-top: 20px;
             padding: 20px;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 16px;
+            border: 1px solid var(--border-color);
         }
 
         .qr-code img {
             max-width: 200px;
             width: 100%;
             height: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
         }
 
         .stats {
@@ -557,7 +575,7 @@
             <div class="result-card" id="resultCard">
                 <div class="short-url-container">
                     <div class="short-url" id="shortUrl"></div>
-                    <button class="btn-copy" onclick="copyToClipboard()">Copy</button>
+                    <button class="btn-copy" id="copyBtn">Copy</button>
                 </div>
 
                 <div class="stats">
@@ -672,12 +690,27 @@
         });
 
         // Copy to clipboard
-        function copyToClipboard() {
-            const shortUrl = document.getElementById('shortUrl').textContent;
-            navigator.clipboard.writeText(shortUrl).then(() => {
-                showToast('📋 Copied to clipboard!');
-            });
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function() {
+                    const shortUrl = document.getElementById('shortUrl').textContent;
+                    if (shortUrl) {
+                        navigator.clipboard.writeText(shortUrl).then(() => {
+                            showToast('📋 Copied to clipboard!');
+                            // Change button text temporarily
+                            copyBtn.textContent = 'Copied!';
+                            setTimeout(() => {
+                                copyBtn.textContent = 'Copy';
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Failed to copy:', err);
+                            showToast('❌ Failed to copy');
+                        });
+                    }
+                });
+            }
+        });
 
         // Show toast notification
         function showToast(message) {
